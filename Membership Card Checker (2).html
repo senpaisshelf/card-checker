@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Membership Code Manager</title>
+    <style>
+ body { font-family: Arial, sans-serif; padding: 20px; }
+        .tablink { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; margin-right: 5px; }
+        .tabcontent { display: none; padding: 20px; border: 1px solid #ddd; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        input[type=text] { width: 100%; padding: 6px; box-sizing: border-box; }
+
+        #result { margin-top: 15px; padding: 10px; background: #f9f9f9; border: 1px solid #ddd; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .flex-container { display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .home-button { padding: 10px 20px; background: #008CBA; color: white; border: none; cursor: pointer; margin: 5px; }
+        .back-to-home { margin-bottom: 15px; }
+        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 50%; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+
+        .close:hover, .close:focus { color: black; text-decoration: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+      <div id="home" class="tabcontent flex-container">
+        <div class="container">
+            <h1>Welcome to Membership Code Manager</h1>
+            <button class="home-button" onclick="openTab('editor')">Editor</button>
+            <button class="home-button" onclick="openTab('checker')">Checker</button>
+        </div>
+    </div>
+
+    <div id="editor" class="tabcontent container">
+
+        <button class="home-button back-to-home" onclick="openTab('home')">Back to Home</button>
+        <h2>Membership Codes Editor</h2>
+        <table id="codesTable">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Address</th>
+                    <th>Mobile</th>
+                    <th>Edit</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="checker" class="tabcontent container">
+
+        <button class="home-button back-to-home" onclick="openTab('home')">Back to Home</button>
+        <h2>Code Checker</h2>
+        <input type="text" id="codeInput" placeholder="Enter 11-digit code" style="width: 100%; margin-bottom: 10px;">
+        <button class="home-button" onclick="checkCode()">Check Code</button>
+        <div id="result"></div>
+        <button id="editButton" class="home-button" onclick="openEditModal()" style="display: none;">Edit Details</button>
+    </div>
+
+    <!-- Modal for editing details -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+
+            <h2>Edit Details</h2>
+            <label for="editCode">Code:</label>
+            <input type="text" id="editCode" readonly>
+            <label for="editName">Name:</label>
+            <input type="text" id="editName">
+            <label for="editEmail">Email:</label>
+            <input type="text" id="editEmail">
+            <label for="editAddress">Address:</label>
+            <input type="text" id="editAddress">
+            <label for="editMobile">Mobile:</label>
+            <input type="text" id="editMobile">
+            <button class="home-button" onclick="saveEditedDetails()">Save</button>
+        </div>
+    </div>
+
+</body>
+<script>
+    // UNIQUE 50 CODES (fixed duplicates)
+    const predefinedCodes = [
+       "A7B9C3D5E1F", "Z2Y4X6W8V0N", "Q1W2E3R4T5Y", "H7J9K3L5M1P", "S8A4D6F2G0H",
+    "V9B1C7E3R5T", "N0M2L4K6J8H", "F3G5H7J9K1L", "P8Q4R6S2T0V", "W1X3Y5Z7A9B",
+    "C4D6F8G0H2J", "T5Y7Z9A1B3C", "R6S8T0V2W4X", "E5F7G9H1J3K", "L4M6N8P0Q2R",
+    "B3C5D7F9H1J", "K2L4M6N8P0Q", "G1H3J5K7L9M", "Y0Z2A4C6E8F", "D9E1F3G5H7J",
+    "T8U0V2W4X6Y", "J7K9L1M3N5P", "R6S8T0V2W5X", "Z5A3B5C7D9E", "F4G6H8J0K2L",
+    "M3N5P7Q9R1S", "X2Y4Z6A8B0C", "H1J3K5L7M9N", "V0W2X4Y6Z8A", "B9C1D3F5G7H",
+
+    "N8P0Q2R4S6T", "L7M9N1P3Q5R", "F6G8H0J2K4L", "T5Y7Z9A1B4D", "R4S6T8V0W2X",
+    "Z3A5B7C9D1E", "J2K4L6M8N0P", "H1F3G5J7K9L", "V0W2X4Y6Z7A", "B9C1D3F4G7H",
+    "N8P0Q2R3S6T", "L7M9N0P3Q5R", "F6G8H0J1K4L", "T5Y6Z9A1B3C", "R4S5T8V0W2X",
+    "Z2A5B7C9D1E", "J1K4L6M8N0P", "H0F3G5J7K9L", "V8W2X4Y6Z8B", "B7C1D3F5G9H"
+    ];
+
+    // Initialize data with proper priority
+    function initializeData() {
+        let data = JSON.parse(localStorage.getItem('membershipData'));
+        if (data) return data;
+        data = predefinedCodes.map(code => ({
+            code,
+            name: '',
+            email: '',
+            address: '',
+            mobile: ''
+        }));
+        localStorage.setItem('membershipData', JSON.stringify(data));
+        return data;
+    }
+
+    // Populate editor table
+    function populateEditor(data) {
+        const tableBody = document.querySelector('#codesTable tbody');
+        tableBody.innerHTML = '';
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            row.setAttribute('data-code', item.code);
+            row.innerHTML = `
+                <td>${item.code}</td>
+                <td>${item.name}</td>
+                <td>${item.email}</td>
+                <td>${item.address}</td>
+                <td>${item.mobile}</td>
+                <td><button class="home-button" onclick="openEditModal('${item.code}')">Edit</button></td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // Code checking function
+    function checkCode() {
+        const input = document.getElementById('codeInput').value.trim();
+        const data = JSON.parse(localStorage.getItem('membershipData')) || [];
+        const resultDiv = document.getElementById('result');
+        const editButton = document.getElementById('editButton');
+        
+        if (input.length !== 11) {
+            resultDiv.innerHTML = '<div style="color: red; font-weight: bold;">Invalid format - must be exactly 11 characters</div>';
+            editButton.style.display = 'none';
+            return;
+        }
+        
+        const found = data.find(item => item.code === input);
+        
+        if (found) {
+            const { name, email, address, mobile } = found;
+            if (name && email && address && mobile) {
+                resultDiv.innerHTML = `
+                    <div style="color: green; font-weight: bold;">Valid Code</div>
+                    <div>Name: ${name}</div>
+                    <div>Email: ${email}</div>
+                    <div>Address: ${address}</div>
+                    <div>Mobile: ${mobile}</div>
+                `;
+            } else {
+                resultDiv.innerHTML = '<div style="color: orange; font-weight: bold;">Registered but details incomplete</div>';
+            }
+            editButton.style.display = 'block';
+            editButton.onclick = () => openEditModal(found.code);
+        } else {
+            resultDiv.innerHTML = '<div style="color: red; font-weight: bold;">Invalid Code</div>';
+            editButton.style.display = 'none';
+        }
+    }
+
+    // Tab management
+    function openTab(tabName) {
+        document.querySelectorAll('.tabcontent').forEach(tab => tab.style.display = 'none');
+        document.getElementById(tabName).style.display = 'block';
+    }
+
+    // Modal functions
+    function openEditModal(code = null) {
+        const modal = document.getElementById('editModal');
+        modal.style.display = 'block';
+        
+        if (code) {
+            const data = JSON.parse(localStorage.getItem('membershipData')) || [];
+            const found = data.find(item => item.code === code);
+            if (found) {
+                document.getElementById('editCode').value = found.code;
+                document.getElementById('editName').value = found.name;
+                document.getElementById('editEmail').value = found.email;
+                document.getElementById('editAddress').value = found.address;
+                document.getElementById('editMobile').value = found.mobile;
+            }
+        } else {
+            document.getElementById('editCode').value = '';
+            document.getElementById('editName').value = '';
+            document.getElementById('editEmail').value = '';
+            document.getElementById('editAddress').value = '';
+            document.getElementById('editMobile').value = '';
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    function saveEditedDetails() {
+        const code = document.getElementById('editCode').value;
+        const name = document.getElementById('editName').value;
+        const email = document.getElementById('editEmail').value;
+        const address = document.getElementById('editAddress').value;
+        const mobile = document.getElementById('editMobile').value;
+        
+        if (code) {
+            const data = JSON.parse(localStorage.getItem('membershipData')) || [];
+            const index = data.findIndex(item => item.code === code);
+            if (index !== -1) {
+                data[index] = { code, name, email, address, mobile };
+                localStorage.setItem('membershipData', JSON.stringify(data));
+                populateEditor(data);
+                closeModal();
+            }
+        }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        const data = initializeData();
+        populateEditor(data);
+        openTab('home');
+    });
+</script>
+</html>
