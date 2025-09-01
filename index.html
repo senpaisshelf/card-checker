@@ -251,6 +251,7 @@
             <div class="home-view">
                 <h2>Welcome to Membership Code Manager</h2>
                 <p>Manage and verify your membership codes with ease. Store your data securely in Google Drive.</p>
+                <button id="selectFileButton" class="btn btn-secondary">Select File</button>
                 <div class="home-buttons">
                     <button class="btn btn-primary home-button" onclick="showTab('editor')">Editor</button>
                     <button class="btn btn-primary home-button" onclick="showTab('checker')">Checker</button>
@@ -321,21 +322,22 @@
             </div>
         </div>
     </div>
-    <!-- Google Identity Services library -->
+
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- Google APIs library -->
     <script src="https://apis.google.com/js/api.js"></script>
     <script>
-        // Configuration - Replace with your actual Client ID
+
         const CLIENT_ID = '63594858429-9n36lasvse1gm3qtinh2vuidpsmoea9v.apps.googleusercontent.com';
         const DRIVE_FILE_ID = '1HvA209gFox5iidqnTyZC-AGcOGwOeSCD';
-        // Google Drive file ID for storing data
+        const APP_ID = '63594858429';
+
         let driveFileId = null;
         let isSignedIn = false;
         let tokenClient;
         let gapiInited = false;
         let currentTokenPromise = null;
         let statusTimeout = null;
+        let pickerInited = false;
         // UNIQUE 50 CODES
         const predefinedCodes = [
             "A7B9C3D5E1F", "Z2Y4X6W8V0N", "Q1W2E3R4T5Y", "H7J9K3L5M1P", "S8A4D6F2G0H",
@@ -349,7 +351,7 @@
             "N8P0Q2R3S6T", "L7M9N0P3Q5R", "F6G8H0J1K4L", "T5Y6Z9A1B3C", "R4S5T8V0W2X",
             "Z2A5B7C9D1E", "J1K4L6M8N0P", "H0F3G5J7K9L", "V8W2X4Y6Z8B", "B7C1D3F5G9H"
         ];
-        // Token callback
+
         function tokenCallback(tokenResponse) {
             if (tokenResponse.error) {
                 if (currentTokenPromise) {
@@ -364,15 +366,15 @@
                 currentTokenPromise = null;
             }
         }
-        // Initialize token client
+
         function initTokenClient() {
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
-                scope: 'https://www.googleapis.com/auth/drive',
+                scope: 'https://www.googleapis.com/auth/drive.file',
                 callback: tokenCallback
             });
         }
-        // Ensure access token is available
+
         async function ensureToken(prompt = '') {
             if (gapi.client.getToken() !== null) return;
             if (currentTokenPromise) return currentTokenPromise.promise;
@@ -383,9 +385,17 @@
             });
             currentTokenPromise = { promise, resolve, reject };
             tokenClient.requestAccessToken({ prompt });
-            return promise;
+            return promise.catch(async (error) => {
+                if (prompt === '' && !localStorage.getItem('driveConsentGranted')) {
+                    currentTokenPromise = null;
+                    await tokenClient.requestAccessToken({ prompt: 'consent' });
+                    localStorage.setItem('driveConsentGranted', 'true');
+                } else {
+                    throw error;
+                }
+            });
         }
-        // Initialize the application
+
         function initialize() {
             // Set up Google Sign In button
             window.google.accounts.id.initialize({
@@ -399,18 +409,19 @@
             );
             // Set up Google API client
             gapiLoad();
+
             // Set up event listeners
             document.getElementById('signOutButton').addEventListener('click', signOut);
             document.getElementById('loadFromDrive').addEventListener('click', loadFromDrive);
             document.getElementById('saveToDrive').addEventListener('click', saveToDrive);
-            // Initialize data
+            document.getElementById('selectFileButton').addEventListener('click', showFilePicker);
+
             const data = initializeData();
             populateEditor(data);
         }
-        // Handle Google sign-in
+
         async function handleCredentialResponse(response) {
             if (response.credential) {
-                // decode JWT token to get user info
                 const payload = parseJwt(response.credential);
                 localStorage.setItem('userProfile', JSON.stringify(payload));
                 document.getElementById('userAvatar').src = payload.picture;
@@ -419,11 +430,16 @@
                 document.getElementById('signInButton').style.display = 'none';
                 isSignedIn = true;
                 showStatus('Signed in successfully as ' + payload.name, 'success');
-                // Initialize token client and get token
+
                 if (gapiInited) {
                     initTokenClient();
                     try {
-                        await ensureToken('consent');
+                        if (!localStorage.getItem('driveConsentGranted')) {
+                            await ensureToken('consent');
+                            localStorage.setItem('driveConsentGranted', 'true');
+                        } else {
+                            await ensureToken('');
+                        }
                         await findOrCreateDataFile();
                     } catch (error) {
                         console.error('Error during post-sign-in setup', error);
@@ -434,7 +450,7 @@
                 }
             }
         }
-        // Parse JWT token
+
         function parseJwt(token) {
             const base64Url = token.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -443,14 +459,15 @@
             }).join(''));
             return JSON.parse(jsonPayload);
         }
-        // Load Google API client
+
         function gapiLoad() {
-            gapi.load('client', async () => {
+            gapi.load('client:picker', async () => {
                 try {
                     await gapi.client.init({
                         discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
                     });
                     gapiInited = true;
+                    pickerInited = true;
                     if (isSignedIn) {
                         initTokenClient();
                         await ensureToken('consent');
@@ -462,39 +479,40 @@
                 }
             });
         }
-        // Sign out function
+
         function signOut() {
             window.google.accounts.id.disableAutoSelect();
             google.accounts.oauth2.revoke(gapi.client.getToken()?.access_token, () => {});
             gapi.client.setToken(null);
             localStorage.removeItem('userProfile');
+            localStorage.removeItem('driveConsentGranted');
             document.getElementById('userInfo').style.display = 'none';
             document.getElementById('signInButton').style.display = 'block';
             isSignedIn = false;
             showStatus('Signed out successfully', 'info');
         }
-        // Show status message
+
         function showStatus(message, type) {
             const statusElement = document.getElementById('statusMessage');
             if (statusTimeout) {
                 clearTimeout(statusTimeout);
-            }   
+            }
             statusElement.textContent = message;
             statusElement.className = 'status ' + type;
-            // Auto-hide after 5 seconds
+
             statusTimeout = setTimeout(() => {
                 statusElement.className = 'status';
                 statusTimeout = null;
             }, 5000);
         }
-        // Tab navigation
+
         function showTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
             document.getElementById(tabName).classList.add('active');
         }
-        // Initialize data with proper priority
+
         function initializeData() {
             let data = JSON.parse(localStorage.getItem('membershipData'));
             if (data) return data;
@@ -508,7 +526,7 @@
             localStorage.setItem('membershipData', JSON.stringify(data));
             return data;
         }
-        // Populate editor table
+
         function populateEditor(data) {
             const tableBody = document.querySelector('#codesTable tbody');
             tableBody.innerHTML = '';
@@ -528,44 +546,65 @@
                 tableBody.appendChild(row);
             });
         }
-        // Find or create the data file in Google Drive
+        async function showFilePicker() {
+            if(!pickerInited) {
+                showStatus('Picker not ready', 'error');
+                return;
+            }
+            showStatus('Opening File Picker ...', 'info');
+            try {
+                await ensureToken('consent');
+                const view = new google.picker.View(google.picker.ViewId.DOCS);
+                view.setMimeTypes('application/json');
+                const picker = new google.picker.PickerBuilder()
+                    .enableFeature(google.picker.Feature.NAV_HIDDEN)
+                    .setAppId(APP_ID)
+                    .setOAuthToken(gapi.client.getToken().access_token)
+                    .addView(view)
+                    .setCallback(pickerCallback)
+                    .build();
+                picker.setVisible(true);
+            } catch (error) {
+                console.error('Error opening file picker', error);
+                showStatus('Error opening file picker: ' + (error.message || 'Unknown error'), 'error');
+            }
+        }
+
+        function pickerCallback(data) {
+            if(data.action == google.picker.Action.PICKED) {
+                const doc = data.docs[0];
+                driveFileId = doc.id;
+                localStorage.setItem('driveFileId', driveFileId);
+                console.log("selected drive file ID:", driveFileId);
+                showStatus('File selected: ' + doc.name, 'success');
+                loadFromDrive();
+            } else if(data.action == google.picker.Action.Cancel) {
+                showStatus('File selection canceled', 'info');
+            }
+        }
+
         async function findOrCreateDataFile() {
             if (!isSignedIn) {
                 showStatus('Please sign in to access Google Drive', 'error');
                 return;
             }
-            if (DRIVE_FILE_ID) {
+            const storedFileId = localStorage.getItem('driveFileId');
+            if (storedFileId && storedFileId != DRIVE_FILE_ID) {
+                showStatus('Wrong File selected, Please select again', 'info');
+                await showFilePicker();
+                return;
+            }
+            if (storedFileId && storedFileId == DRIVE_FILE_ID) {
                 driveFileId = DRIVE_FILE_ID;
                 showStatus('Using provided Drive file ID', 'info');
                 await loadFromDrive();
                 return;
             }
-            showStatus('Searching for data file in Google Drive...', 'info');
-            try {
-                await ensureToken();
-                const response = await gapi.client.drive.files.list({
-                    q: "name='membership_data.json' and trashed=false",
-                    fields: 'files(id, name)',
-                    includeItemsFromAllDrives: true,
-                    supportsAllDrives: true
-                });
-                console.log('List response:', response); // Debug
-                const files = response.result.files;
-                if (files && files.length > 0) {
-                    // File exists
-                    driveFileId = files[0].id;
-                    showStatus('Data file found in Google Drive', 'success');
-                    await loadFromDrive();
-                } else {
-                    // Create new file
-                    await createDataFile();
-                }
-            } catch (error) {
-                console.error('Error searching for file', error);
-                showStatus('Error accessing Google Drive: ' + (error.result?.error?.message || error.message), 'error');
-            }
+
+            showStatus('No file selected yet. Please select one.', 'info');
+            await showFilePicker();
         }
-        // Create a new data file in Google Drive
+
         async function createDataFile() {
             if (!isSignedIn) {
                 showStatus('Please sign in to create a data file', 'error');
@@ -599,7 +638,7 @@
                     headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },
                     body: body
                 });
-                console.log('Create response:', response); // Debug
+                console.log('Create response:', response);
                 driveFileId = response.result.id;
                 showStatus('New data file created in Google Drive', 'success');
                 populateEditor(data);
@@ -608,7 +647,7 @@
                 showStatus('Error creating file in Google Drive: ' + (error.result?.error?.message || error.message), 'error');
             }
         }
-        // Load data from Google Drive
+
         async function loadFromDrive() {
             if (!isSignedIn) {
                 showStatus('Please sign in to load data from Google Drive', 'error');
@@ -625,7 +664,7 @@
                     fileId: driveFileId,
                     alt: 'media'
                 });
-                console.log('Load response:', response); // Debug
+                console.log('Load response:', response);
                 const data = JSON.parse(response.body);
                 localStorage.setItem('membershipData', JSON.stringify(data));
                 populateEditor(data);
@@ -635,7 +674,7 @@
                 showStatus('Error loading data from Google Drive: ' + (error.result?.error?.message || error.message), 'error');
             }
         }
-        // Save data to Google Drive
+
         async function saveToDrive() {
             if (!isSignedIn) {
                 showStatus('Please sign in to save data to Google Drive', 'error');
@@ -648,7 +687,7 @@
             showStatus('Saving data to Google Drive...', 'info');
             const data = JSON.parse(localStorage.getItem('membershipData') || '[]');
             const fileContent = JSON.stringify(data);
-            const metadata = { // Optional, but include if updating name/mime
+            const metadata = {
                 name: 'membership_data.json',
                 mimeType: 'application/json'
             };
@@ -673,14 +712,14 @@
                     headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },
                     body: body
                 });
-                console.log('Save response:', response); // Debug
+                console.log('Save response:', response);
                 showStatus('Data saved to Google Drive successfully', 'success');
             } catch (error) {
                 console.error('Error saving file', error);
                 showStatus('Error saving data to Google Drive: ' + (error.result?.error?.message || error.message), 'error');
             }
         }
-        // Code checking function
+
         function checkCode() {
             const input = document.getElementById('codeInput').value.trim();
             const data = JSON.parse(localStorage.getItem('membershipData')) || [];
@@ -716,7 +755,7 @@
                 editButton.style.display = 'none';
             }
         }
-        // Modal functions
+
         function openEditModal(code = null) {
             const modal = document.getElementById('editModal');
             modal.style.display = 'flex';
@@ -755,16 +794,15 @@
                     localStorage.setItem('membershipData', JSON.stringify(data));
                     populateEditor(data);
                     closeModal();
-                    // Auto-save to Drive if signed in
+
                     if (isSignedIn && driveFileId) {
                         saveToDrive();
                     }
                 }
             }
         }
-        // Initialize on page load
+
         window.onload = function () {
-            // Check if we're running in a proper environment (not file://)
             if (window.location.protocol === 'file:') {
                 showStatus('Warning: For full functionality, please run this application on a web server.', 'error');
             }
@@ -777,10 +815,13 @@
                 document.getElementById('userInfo').style.display = 'flex';
                 document.getElementById('signInButton').style.display = 'none';
                 isSignedIn = true;
-                // Optionally refresh token silently
+                
                 if (gapiInited) {
                     initTokenClient();
-                    ensureToken('').catch(() => {});  // Silent attempt; prompt if needed later
+                    ensureToken('').catch((error) => {
+                        showStatus('Drive access expired, Please re-authorize.', 'info');
+                        console.error('Silent token refresh failed', error);
+                    });  // Silent attempt; prompt if needed later
                 }
             }
         };
