@@ -1,231 +1,787 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Membership Code Manager</title>
     <style>
- body { font-family: Arial, sans-serif; padding: 20px; }
-        .tablink { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; margin-right: 5px; }
-        .tabcontent { display: none; padding: 20px; border: 1px solid #ddd; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        input[type=text] { width: 100%; padding: 6px; box-sizing: border-box; }
-
-        #result { margin-top: 15px; padding: 10px; background: #f9f9f9; border: 1px solid #ddd; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .flex-container { display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .home-button { padding: 10px 20px; background: #008CBA; color: white; border: none; cursor: pointer; margin: 5px; }
-        .back-to-home { margin-bottom: 15px; }
-        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
-        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 50%; }
-        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
-
-        .close:hover, .close:focus { color: black; text-decoration: none; cursor: pointer; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .auth-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background-color: #4285F4;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #3367D6;
+        }
+        .btn-secondary {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background-color: #e1e1e1;
+        }
+        .btn-success {
+            background-color: #34A853;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #2E8B47;
+        }
+        .btn-danger {
+            background-color: #EA4335;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #D32F2F;
+        }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: #e9ecef;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+        }
+        .tab.active {
+            background: #4285F4;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 0 4px 4px 4px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90%;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .close {
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            display: none;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+        .home-view {
+            text-align: center;
+            padding: 40px 0;
+        }
+        .home-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .home-button {
+            padding: 15px 30px;
+            font-size: 16px;
+            min-width: 150px;
+        }
+        #checkResult {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .valid {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .invalid {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .incomplete {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .drive-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
-      <div id="home" class="tabcontent flex-container">
-        <div class="container">
-            <h1>Welcome to Membership Code Manager</h1>
-            <button class="home-button" onclick="openTab('editor')">Editor</button>
-            <button class="home-button" onclick="openTab('checker')">Checker</button>
+    <div class="container">
+        <div class="header">
+            <h1>Membership Code Manager</h1>
+            <div class="auth-section">
+                <div id="userInfo" class="user-info" style="display: none;">
+                    <img id="userAvatar" class="user-avatar" src="" alt="User Avatar">
+                    <span id="userName"></span>
+                    <button id="signOutButton" class="btn btn-danger">Sign Out</button>
+                </div>
+                <div id="signInButton"></div>
+            </div>
+        </div>
+        <div id="statusMessage" class="status"></div>
+        <div id="home" class="tab-content active">
+            <div class="home-view">
+                <h2>Welcome to Membership Code Manager</h2>
+                <p>Manage and verify your membership codes with ease. Store your data securely in Google Drive.</p>
+                <div class="home-buttons">
+                    <button class="btn btn-primary home-button" onclick="showTab('editor')">Editor</button>
+                    <button class="btn btn-primary home-button" onclick="showTab('checker')">Checker</button>
+                </div>
+            </div>
+        </div>
+        <div id="editor" class="tab-content">
+            <h2>Membership Codes Editor</h2>
+            <p>Edit your membership codes and details. Changes are automatically saved to Google Drive.</p>
+            <div class="drive-actions">
+                <button id="loadFromDrive" class="btn btn-secondary">Load from Drive</button>
+                <button id="saveToDrive" class="btn btn-success">Save to Drive</button>
+            </div>
+            <table id="codesTable">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Address</th>
+                        <th>Mobile</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div id="checker" class="tab-content">
+            <h2>Code Checker</h2>
+            <p>Verify membership codes by entering them below.</p>
+            <div class="form-group">
+                <input type="text" id="codeInput" placeholder="Enter 11-digit code">
+            </div>
+            <button class="btn btn-primary" onclick="checkCode()">Check Code</button>
+            <div id="checkResult"></div>
+            <button id="editButton" class="btn btn-secondary" onclick="openEditModal()"
+                style="display: none; margin-top: 15px;">Edit Details</button>
+        </div>
+        <div id="editModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Edit Details</h3>
+                    <span class="close" onclick="closeModal()">&times;</span>
+                </div>
+                <div class="form-group">
+                    <label for="editCode">Code:</label>
+                    <input type="text" id="editCode" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="editName">Name:</label>
+                    <input type="text" id="editName">
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Email:</label>
+                    <input type="text" id="editEmail">
+                </div>
+                <div class="form-group">
+                    <label for="editAddress">Address:</label>
+                    <input type="text" id="editAddress">
+                </div>
+                <div class="form-group">
+                    <label for="editMobile">Mobile:</label>
+                    <input type="text" id="editMobile">
+                </div>
+                <button class="btn btn-success" onclick="saveEditedDetails()">Save Changes</button>
+            </div>
         </div>
     </div>
-
-    <div id="editor" class="tabcontent container">
-
-        <button class="home-button back-to-home" onclick="openTab('home')">Back to Home</button>
-        <h2>Membership Codes Editor</h2>
-        <table id="codesTable">
-            <thead>
-                <tr>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Address</th>
-                    <th>Mobile</th>
-                    <th>Edit</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
-    <div id="checker" class="tabcontent container">
-
-        <button class="home-button back-to-home" onclick="openTab('home')">Back to Home</button>
-        <h2>Code Checker</h2>
-        <input type="text" id="codeInput" placeholder="Enter 11-digit code" style="width: 100%; margin-bottom: 10px;">
-        <button class="home-button" onclick="checkCode()">Check Code</button>
-        <div id="result"></div>
-        <button id="editButton" class="home-button" onclick="openEditModal()" style="display: none;">Edit Details</button>
-    </div>
-
-    <!-- Modal for editing details -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-
-            <h2>Edit Details</h2>
-            <label for="editCode">Code:</label>
-            <input type="text" id="editCode" readonly>
-            <label for="editName">Name:</label>
-            <input type="text" id="editName">
-            <label for="editEmail">Email:</label>
-            <input type="text" id="editEmail">
-            <label for="editAddress">Address:</label>
-            <input type="text" id="editAddress">
-            <label for="editMobile">Mobile:</label>
-            <input type="text" id="editMobile">
-            <button class="home-button" onclick="saveEditedDetails()">Save</button>
-        </div>
-    </div>
-
-</body>
-<script>
-    // UNIQUE 50 CODES (fixed duplicates)
-    const predefinedCodes = [
-       "A7B9C3D5E1F", "Z2Y4X6W8V0N", "Q1W2E3R4T5Y", "H7J9K3L5M1P", "S8A4D6F2G0H",
-    "V9B1C7E3R5T", "N0M2L4K6J8H", "F3G5H7J9K1L", "P8Q4R6S2T0V", "W1X3Y5Z7A9B",
-    "C4D6F8G0H2J", "T5Y7Z9A1B3C", "R6S8T0V2W4X", "E5F7G9H1J3K", "L4M6N8P0Q2R",
-    "B3C5D7F9H1J", "K2L4M6N8P0Q", "G1H3J5K7L9M", "Y0Z2A4C6E8F", "D9E1F3G5H7J",
-    "T8U0V2W4X6Y", "J7K9L1M3N5P", "R6S8T0V2W5X", "Z5A3B5C7D9E", "F4G6H8J0K2L",
-    "M3N5P7Q9R1S", "X2Y4Z6A8B0C", "H1J3K5L7M9N", "V0W2X4Y6Z8A", "B9C1D3F5G7H",
-
-    "N8P0Q2R4S6T", "L7M9N1P3Q5R", "F6G8H0J2K4L", "T5Y7Z9A1B4D", "R4S6T8V0W2X",
-    "Z3A5B7C9D1E", "J2K4L6M8N0P", "H1F3G5J7K9L", "V0W2X4Y6Z7A", "B9C1D3F4G7H",
-    "N8P0Q2R3S6T", "L7M9N0P3Q5R", "F6G8H0J1K4L", "T5Y6Z9A1B3C", "R4S5T8V0W2X",
-    "Z2A5B7C9D1E", "J1K4L6M8N0P", "H0F3G5J7K9L", "V8W2X4Y6Z8B", "B7C1D3F5G9H"
-    ];
-
-    // Initialize data with proper priority
-    function initializeData() {
-        let data = JSON.parse(localStorage.getItem('membershipData'));
-        if (data) return data;
-        data = predefinedCodes.map(code => ({
-            code,
-            name: '',
-            email: '',
-            address: '',
-            mobile: ''
-        }));
-        localStorage.setItem('membershipData', JSON.stringify(data));
-        return data;
-    }
-
-    // Populate editor table
-    function populateEditor(data) {
-        const tableBody = document.querySelector('#codesTable tbody');
-        tableBody.innerHTML = '';
-        data.forEach(item => {
-            const row = document.createElement('tr');
-            row.setAttribute('data-code', item.code);
-            row.innerHTML = `
-                <td>${item.code}</td>
-                <td>${item.name}</td>
-                <td>${item.email}</td>
-                <td>${item.address}</td>
-                <td>${item.mobile}</td>
-                <td><button class="home-button" onclick="openEditModal('${item.code}')">Edit</button></td>
-            `;
-            tableBody.appendChild(row);
-        });
-    }
-
-    // Code checking function
-    function checkCode() {
-        const input = document.getElementById('codeInput').value.trim();
-        const data = JSON.parse(localStorage.getItem('membershipData')) || [];
-        const resultDiv = document.getElementById('result');
-        const editButton = document.getElementById('editButton');
-        
-        if (input.length !== 11) {
-            resultDiv.innerHTML = '<div style="color: red; font-weight: bold;">Invalid format - must be exactly 11 characters</div>';
-            editButton.style.display = 'none';
-            return;
+    <!-- Google Identity Services library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Google APIs library -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script>
+        // Configuration - Replace with your actual Client ID
+        const CLIENT_ID = '63594858429-9n36lasvse1gm3qtinh2vuidpsmoea9v.apps.googleusercontent.com';
+        const DRIVE_FILE_ID = '1HvA209gFox5iidqnTyZC-AGcOGwOeSCD';
+        // Google Drive file ID for storing data
+        let driveFileId = null;
+        let isSignedIn = false;
+        let tokenClient;
+        let gapiInited = false;
+        let currentTokenPromise = null;
+        let statusTimeout = null;
+        // UNIQUE 50 CODES
+        const predefinedCodes = [
+            "A7B9C3D5E1F", "Z2Y4X6W8V0N", "Q1W2E3R4T5Y", "H7J9K3L5M1P", "S8A4D6F2G0H",
+            "V9B1C7E3R5T", "N0M2L4K6J8H", "F3G5H7J9K1L", "P8Q4R6S2T0V", "W1X3Y5Z7A9B",
+            "C4D6F8G0H2J", "T5Y7Z9A1B3C", "R6S8T0V2W4X", "E5F7G9H1J3K", "L4M6N8P0Q2R",
+            "B3C5D7F9H1J", "K2L4M6N8P0Q", "G1H3J5K7L9M", "Y0Z2A4C6E8F", "D9E1F3G5H7J",
+            "T8U0V2W4X6Y", "J7K9L1M3N5P", "R6S8T0V2W5X", "Z5A3B5C7D9E", "F4G6H8J0K2L",
+            "M3N5P7Q9R1S", "X2Y4Z6A8B0C", "H1J3K5L7M9N", "V0W2X4Y6Z8A", "B9C1D3F5G7H",
+            "N8P0Q2R4S6T", "L7M9N1P3Q5R", "F6G8H0J2K4L", "T5Y7Z9A1B4D", "R4S6T8V0W2X",
+            "Z3A5B7C9D1E", "J2K4L6M8N0P", "H1F3G5J7K9L", "V0W2X4Y6Z7A", "B9C1D3F4G7H",
+            "N8P0Q2R3S6T", "L7M9N0P3Q5R", "F6G8H0J1K4L", "T5Y6Z9A1B3C", "R4S5T8V0W2X",
+            "Z2A5B7C9D1E", "J1K4L6M8N0P", "H0F3G5J7K9L", "V8W2X4Y6Z8B", "B7C1D3F5G9H"
+        ];
+        // Token callback
+        function tokenCallback(tokenResponse) {
+            if (tokenResponse.error) {
+                if (currentTokenPromise) {
+                    currentTokenPromise.reject(tokenResponse.error);
+                    currentTokenPromise = null;
+                }
+                return;
+            }
+            gapi.client.setToken(tokenResponse);
+            if (currentTokenPromise) {
+                currentTokenPromise.resolve();
+                currentTokenPromise = null;
+            }
         }
-        
-        const found = data.find(item => item.code === input);
-        
-        if (found) {
-            const { name, email, address, mobile } = found;
-            if (name && email && address && mobile) {
-                resultDiv.innerHTML = `
-                    <div style="color: green; font-weight: bold;">Valid Code</div>
-                    <div>Name: ${name}</div>
-                    <div>Email: ${email}</div>
-                    <div>Address: ${address}</div>
-                    <div>Mobile: ${mobile}</div>
+        // Initialize token client
+        function initTokenClient() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: 'https://www.googleapis.com/auth/drive',
+                callback: tokenCallback
+            });
+        }
+        // Ensure access token is available
+        async function ensureToken(prompt = '') {
+            if (gapi.client.getToken() !== null) return;
+            if (currentTokenPromise) return currentTokenPromise.promise;
+            let resolve, reject;
+            const promise = new Promise((res, rej) => {
+                resolve = res;
+                reject = rej;
+            });
+            currentTokenPromise = { promise, resolve, reject };
+            tokenClient.requestAccessToken({ prompt });
+            return promise;
+        }
+        // Initialize the application
+        function initialize() {
+            // Set up Google Sign In button
+            window.google.accounts.id.initialize({
+                client_id: CLIENT_ID,
+                callback: handleCredentialResponse,
+                auto_select: false
+            });
+            window.google.accounts.id.renderButton(
+                document.getElementById('signInButton'),
+                { theme: 'outline', size: 'large', width: 200 }
+            );
+            // Set up Google API client
+            gapiLoad();
+            // Set up event listeners
+            document.getElementById('signOutButton').addEventListener('click', signOut);
+            document.getElementById('loadFromDrive').addEventListener('click', loadFromDrive);
+            document.getElementById('saveToDrive').addEventListener('click', saveToDrive);
+            // Initialize data
+            const data = initializeData();
+            populateEditor(data);
+        }
+        // Handle Google sign-in
+        async function handleCredentialResponse(response) {
+            if (response.credential) {
+                // decode JWT token to get user info
+                const payload = parseJwt(response.credential);
+                localStorage.setItem('userProfile', JSON.stringify(payload));
+                document.getElementById('userAvatar').src = payload.picture;
+                document.getElementById('userName').textContent = payload.name;
+                document.getElementById('userInfo').style.display = 'flex';
+                document.getElementById('signInButton').style.display = 'none';
+                isSignedIn = true;
+                showStatus('Signed in successfully as ' + payload.name, 'success');
+                // Initialize token client and get token
+                if (gapiInited) {
+                    initTokenClient();
+                    try {
+                        await ensureToken('consent');
+                        await findOrCreateDataFile();
+                    } catch (error) {
+                        console.error('Error during post-sign-in setup', error);
+                        showStatus('Error getting Drive access: ' + error, 'error');
+                    }
+                } else {
+                    showStatus('Google API client not ready yet. Please try loading Drive data manually.', 'info');
+                }
+            }
+        }
+        // Parse JWT token
+        function parseJwt(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+        // Load Google API client
+        function gapiLoad() {
+            gapi.load('client', async () => {
+                try {
+                    await gapi.client.init({
+                        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+                    });
+                    gapiInited = true;
+                    if (isSignedIn) {
+                        initTokenClient();
+                        await ensureToken('consent');
+                        await findOrCreateDataFile();
+                    }
+                } catch (error) {
+                    console.error('Error loading GAPI client', error);
+                    showStatus('Error initializing Google API: ' + error.message, 'error');
+                }
+            });
+        }
+        // Sign out function
+        function signOut() {
+            window.google.accounts.id.disableAutoSelect();
+            google.accounts.oauth2.revoke(gapi.client.getToken()?.access_token, () => {});
+            gapi.client.setToken(null);
+            localStorage.removeItem('userProfile');
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('signInButton').style.display = 'block';
+            isSignedIn = false;
+            showStatus('Signed out successfully', 'info');
+        }
+        // Show status message
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('statusMessage');
+            if (statusTimeout) {
+                clearTimeout(statusTimeout);
+            }   
+            statusElement.textContent = message;
+            statusElement.className = 'status ' + type;
+            // Auto-hide after 5 seconds
+            statusTimeout = setTimeout(() => {
+                statusElement.className = 'status';
+                statusTimeout = null;
+            }, 5000);
+        }
+        // Tab navigation
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+        }
+        // Initialize data with proper priority
+        function initializeData() {
+            let data = JSON.parse(localStorage.getItem('membershipData'));
+            if (data) return data;
+            data = predefinedCodes.map(code => ({
+                code,
+                name: '',
+                email: '',
+                address: '',
+                mobile: ''
+            }));
+            localStorage.setItem('membershipData', JSON.stringify(data));
+            return data;
+        }
+        // Populate editor table
+        function populateEditor(data) {
+            const tableBody = document.querySelector('#codesTable tbody');
+            tableBody.innerHTML = '';
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-code', item.code);
+                row.innerHTML = `
+                    <td>${item.code}</td>
+                    <td>${item.name}</td>
+                    <td>${item.email}</td>
+                    <td>${item.address}</td>
+                    <td>${item.mobile}</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="openEditModal('${item.code}')">Edit</button>
+                    </td>
                 `;
-            } else {
-                resultDiv.innerHTML = '<div style="color: orange; font-weight: bold;">Registered but details incomplete</div>';
-            }
-            editButton.style.display = 'block';
-            editButton.onclick = () => openEditModal(found.code);
-        } else {
-            resultDiv.innerHTML = '<div style="color: red; font-weight: bold;">Invalid Code</div>';
-            editButton.style.display = 'none';
+                tableBody.appendChild(row);
+            });
         }
-    }
-
-    // Tab management
-    function openTab(tabName) {
-        document.querySelectorAll('.tabcontent').forEach(tab => tab.style.display = 'none');
-        document.getElementById(tabName).style.display = 'block';
-    }
-
-    // Modal functions
-    function openEditModal(code = null) {
-        const modal = document.getElementById('editModal');
-        modal.style.display = 'block';
-        
-        if (code) {
-            const data = JSON.parse(localStorage.getItem('membershipData')) || [];
-            const found = data.find(item => item.code === code);
-            if (found) {
-                document.getElementById('editCode').value = found.code;
-                document.getElementById('editName').value = found.name;
-                document.getElementById('editEmail').value = found.email;
-                document.getElementById('editAddress').value = found.address;
-                document.getElementById('editMobile').value = found.mobile;
+        // Find or create the data file in Google Drive
+        async function findOrCreateDataFile() {
+            if (!isSignedIn) {
+                showStatus('Please sign in to access Google Drive', 'error');
+                return;
             }
-        } else {
-            document.getElementById('editCode').value = '';
-            document.getElementById('editName').value = '';
-            document.getElementById('editEmail').value = '';
-            document.getElementById('editAddress').value = '';
-            document.getElementById('editMobile').value = '';
+            if (DRIVE_FILE_ID) {
+                driveFileId = DRIVE_FILE_ID;
+                showStatus('Using provided Drive file ID', 'info');
+                await loadFromDrive();
+                return;
+            }
+            showStatus('Searching for data file in Google Drive...', 'info');
+            try {
+                await ensureToken();
+                const response = await gapi.client.drive.files.list({
+                    q: "name='membership_data.json' and trashed=false",
+                    fields: 'files(id, name)',
+                    includeItemsFromAllDrives: true,
+                    supportsAllDrives: true
+                });
+                console.log('List response:', response); // Debug
+                const files = response.result.files;
+                if (files && files.length > 0) {
+                    // File exists
+                    driveFileId = files[0].id;
+                    showStatus('Data file found in Google Drive', 'success');
+                    await loadFromDrive();
+                } else {
+                    // Create new file
+                    await createDataFile();
+                }
+            } catch (error) {
+                console.error('Error searching for file', error);
+                showStatus('Error accessing Google Drive: ' + (error.result?.error?.message || error.message), 'error');
+            }
         }
-    }
-
-    function closeModal() {
-        document.getElementById('editModal').style.display = 'none';
-    }
-
-    function saveEditedDetails() {
-        const code = document.getElementById('editCode').value;
-        const name = document.getElementById('editName').value;
-        const email = document.getElementById('editEmail').value;
-        const address = document.getElementById('editAddress').value;
-        const mobile = document.getElementById('editMobile').value;
-        
-        if (code) {
-            const data = JSON.parse(localStorage.getItem('membershipData')) || [];
-            const index = data.findIndex(item => item.code === code);
-            if (index !== -1) {
-                data[index] = { code, name, email, address, mobile };
+        // Create a new data file in Google Drive
+        async function createDataFile() {
+            if (!isSignedIn) {
+                showStatus('Please sign in to create a data file', 'error');
+                return;
+            }
+            showStatus('Creating new data file in Google Drive...', 'info');
+            const data = initializeData();
+            const fileContent = JSON.stringify(data);
+            const metadata = {
+                name: 'membership_data.json',
+                mimeType: 'application/json'
+            };
+            const boundary = '-------' + Math.random().toString(36).substring(2);
+            const body = [
+                '--' + boundary,
+                'Content-Type: application/json; charset=UTF-8',
+                '',
+                JSON.stringify(metadata),
+                '--' + boundary,
+                'Content-Type: application/json',
+                '',
+                fileContent,
+                '--' + boundary + '--'
+            ].join('\r\n');
+            try {
+                await ensureToken();
+                const response = await gapi.client.request({
+                    path: '/upload/drive/v3/files',
+                    method: 'POST',
+                    params: { uploadType: 'multipart' },
+                    headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },
+                    body: body
+                });
+                console.log('Create response:', response); // Debug
+                driveFileId = response.result.id;
+                showStatus('New data file created in Google Drive', 'success');
+                populateEditor(data);
+            } catch (error) {
+                console.error('Error creating file', error);
+                showStatus('Error creating file in Google Drive: ' + (error.result?.error?.message || error.message), 'error');
+            }
+        }
+        // Load data from Google Drive
+        async function loadFromDrive() {
+            if (!isSignedIn) {
+                showStatus('Please sign in to load data from Google Drive', 'error');
+                return;
+            }
+            if (!driveFileId) {
+                showStatus('No data file found. Please create one first.', 'error');
+                return;
+            }
+            showStatus('Loading data from Google Drive...', 'info');
+            try {
+                await ensureToken();
+                const response = await gapi.client.drive.files.get({
+                    fileId: driveFileId,
+                    alt: 'media'
+                });
+                console.log('Load response:', response); // Debug
+                const data = JSON.parse(response.body);
                 localStorage.setItem('membershipData', JSON.stringify(data));
                 populateEditor(data);
-                closeModal();
+                showStatus('Data loaded from Google Drive successfully', 'success');
+            } catch (error) {
+                console.error('Error loading file', error);
+                showStatus('Error loading data from Google Drive: ' + (error.result?.error?.message || error.message), 'error');
             }
         }
-    }
-
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', () => {
-        const data = initializeData();
-        populateEditor(data);
-        openTab('home');
-    });
-</script>
+        // Save data to Google Drive
+        async function saveToDrive() {
+            if (!isSignedIn) {
+                showStatus('Please sign in to save data to Google Drive', 'error');
+                return;
+            }
+            if (!driveFileId) {
+                showStatus('No data file found. Please create one first.', 'error');
+                return;
+            }
+            showStatus('Saving data to Google Drive...', 'info');
+            const data = JSON.parse(localStorage.getItem('membershipData') || '[]');
+            const fileContent = JSON.stringify(data);
+            const metadata = { // Optional, but include if updating name/mime
+                name: 'membership_data.json',
+                mimeType: 'application/json'
+            };
+            const boundary = '-------' + Math.random().toString(36).substring(2);
+            const body = [
+                '--' + boundary,
+                'Content-Type: application/json; charset=UTF-8',
+                '',
+                JSON.stringify(metadata),
+                '--' + boundary,
+                'Content-Type: application/json',
+                '',
+                fileContent,
+                '--' + boundary + '--'
+            ].join('\r\n');
+            try {
+                await ensureToken();
+                const response = await gapi.client.request({
+                    path: '/upload/drive/v3/files/' + driveFileId,
+                    method: 'PATCH',
+                    params: { uploadType: 'multipart' },
+                    headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },
+                    body: body
+                });
+                console.log('Save response:', response); // Debug
+                showStatus('Data saved to Google Drive successfully', 'success');
+            } catch (error) {
+                console.error('Error saving file', error);
+                showStatus('Error saving data to Google Drive: ' + (error.result?.error?.message || error.message), 'error');
+            }
+        }
+        // Code checking function
+        function checkCode() {
+            const input = document.getElementById('codeInput').value.trim();
+            const data = JSON.parse(localStorage.getItem('membershipData')) || [];
+            const resultDiv = document.getElementById('checkResult');
+            const editButton = document.getElementById('editButton');
+            if (input.length !== 11) {
+                resultDiv.innerHTML = '<div style="color: red; font-weight: bold;">Invalid format - must be exactly 11 characters</div>';
+                resultDiv.className = 'invalid';
+                editButton.style.display = 'none';
+                return;
+            }
+            const found = data.find(item => item.code === input);
+            if (found) {
+                const { name, email, address, mobile } = found;
+                if (name && email && address && mobile) {
+                    resultDiv.innerHTML = `
+                        <div style="font-weight: bold;">Valid Code</div>
+                        <div>Name: ${name}</div>
+                        <div>Email: ${email}</div>
+                        <div>Address: ${address}</div>
+                        <div>Mobile: ${mobile}</div>
+                    `;
+                    resultDiv.className = 'valid';
+                } else {
+                    resultDiv.innerHTML = '<div style="font-weight: bold;">Registered but details incomplete</div>';
+                    resultDiv.className = 'incomplete';
+                }
+                editButton.style.display = 'block';
+                editButton.onclick = () => openEditModal(found.code);
+            } else {
+                resultDiv.innerHTML = '<div style="font-weight: bold;">Invalid Code</div>';
+                resultDiv.className = 'invalid';
+                editButton.style.display = 'none';
+            }
+        }
+        // Modal functions
+        function openEditModal(code = null) {
+            const modal = document.getElementById('editModal');
+            modal.style.display = 'flex';
+            if (code) {
+                const data = JSON.parse(localStorage.getItem('membershipData')) || [];
+                const found = data.find(item => item.code === code);
+                if (found) {
+                    document.getElementById('editCode').value = found.code;
+                    document.getElementById('editName').value = found.name;
+                    document.getElementById('editEmail').value = found.email;
+                    document.getElementById('editAddress').value = found.address;
+                    document.getElementById('editMobile').value = found.mobile;
+                }
+            } else {
+                document.getElementById('editCode').value = '';
+                document.getElementById('editName').value = '';
+                document.getElementById('editEmail').value = '';
+                document.getElementById('editAddress').value = '';
+                document.getElementById('editMobile').value = '';
+            }
+        }
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+        function saveEditedDetails() {
+            const code = document.getElementById('editCode').value;
+            const name = document.getElementById('editName').value;
+            const email = document.getElementById('editEmail').value;
+            const address = document.getElementById('editAddress').value;
+            const mobile = document.getElementById('editMobile').value;
+            if (code) {
+                const data = JSON.parse(localStorage.getItem('membershipData')) || [];
+                const index = data.findIndex(item => item.code === code);
+                if (index !== -1) {
+                    data[index] = { code, name, email, address, mobile };
+                    localStorage.setItem('membershipData', JSON.stringify(data));
+                    populateEditor(data);
+                    closeModal();
+                    // Auto-save to Drive if signed in
+                    if (isSignedIn && driveFileId) {
+                        saveToDrive();
+                    }
+                }
+            }
+        }
+        // Initialize on page load
+        window.onload = function () {
+            // Check if we're running in a proper environment (not file://)
+            if (window.location.protocol === 'file:') {
+                showStatus('Warning: For full functionality, please run this application on a web server.', 'error');
+            }
+            initialize();
+            const storedProfile = localStorage.getItem('userProfile');
+            if (storedProfile) {
+                const payload = JSON.parse(storedProfile);
+                document.getElementById('userAvatar').src = payload.picture;
+                document.getElementById('userName').textContent = payload.name;
+                document.getElementById('userInfo').style.display = 'flex';
+                document.getElementById('signInButton').style.display = 'none';
+                isSignedIn = true;
+                // Optionally refresh token silently
+                if (gapiInited) {
+                    initTokenClient();
+                    ensureToken('').catch(() => {});  // Silent attempt; prompt if needed later
+                }
+            }
+        };
+    </script>
+</body>
 </html>
